@@ -4,3 +4,20 @@ export function formatScore(score) {
   }
   return score + '%';
 }
+
+export function calculateMatchPercentage(matched, required) {
+  if (required <= 0) return 0;
+  if (matched < 0) return 0;
+  const pct = Math.round((matched / required) * 100);
+  return Math.min(100, Math.max(0, pct));
+}
+
+export function getMatchTier(score) {
+  if (score >= 80) {
+    return { label: 'Xuất sắc', class: 'tier-high', color: '#10b981' };
+  }
+  if (score >= 60) {
+    return { label: 'Phù hợp', class: 'tier-medium', color: '#38bdf8' };
+  }
+  return { label: 'Cần bổ sung', class: 'tier-low', color: '#f59e0b' };
+}

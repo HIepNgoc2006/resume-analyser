@@ -2,20 +2,701 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Resume Analyser</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Analyser - AI Screening & Matching Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; background: #0f172a; color: #f8fafc; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-    .card { background: #1e293b; padding: 2.5rem; border-radius: 12px; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3); text-align: center; max-width: 500px; }
-    h1 { color: #38bdf8; margin-bottom: 0.5rem; }
-    p { color: #94a3b8; line-height: 1.6; }
-    .status { display: inline-block; padding: 0.25rem 0.75rem; background: #065f46; color: #34d399; border-radius: 9999px; font-weight: bold; font-size: 0.875rem; margin-top: 1rem; }
+    :root {
+      --bg-main: #070a12;
+      --bg-card: rgba(18, 24, 38, 0.75);
+      --bg-card-hover: rgba(24, 32, 52, 0.9);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: #38bdf8;
+      --primary: #0284c7;
+      --primary-glow: rgba(56, 189, 248, 0.35);
+      --accent-green: #10b981;
+      --accent-green-bg: rgba(16, 185, 129, 0.15);
+      --accent-amber: #f59e0b;
+      --accent-amber-bg: rgba(245, 158, 11, 0.15);
+      --accent-purple: #8b5cf6;
+      --accent-purple-bg: rgba(139, 92, 246, 0.15);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at 50% 0%, #172554 0%, var(--bg-main) 70%);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.6;
+      padding: 1.5rem;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #0284c7, #6366f1);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      box-shadow: 0 0 20px var(--primary-glow);
+    }
+
+    .brand h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(to right, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-badges {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .badge {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+
+    .hero-banner {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-banner h2 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-banner p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      max-width: 650px;
+      margin: 0 auto;
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.75rem;
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 860px) {
+      .input-grid { grid-template-columns: 1fr; }
+    }
+
+    .input-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.75rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .preset-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .preset-btn:hover {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    textarea {
+      width: 100%;
+      height: 240px;
+      background: rgba(10, 14, 26, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.92rem;
+      resize: vertical;
+      line-height: 1.6;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .action-row {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .btn-analyze {
+      background: linear-gradient(135deg, #0284c7 0%, #4f46e5 100%);
+      color: white;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 1rem 3rem;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: 0 4px 25px rgba(2, 132, 199, 0.45);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .btn-analyze:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 35px rgba(2, 132, 199, 0.65);
+    }
+
+    .btn-analyze:active {
+      transform: translateY(0);
+    }
+
+    /* Results Dashboard */
+    .results-container {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2.5rem;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .results-header {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 2.5rem;
+      align-items: center;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 2rem;
+    }
+
+    @media (max-width: 700px) {
+      .results-header { grid-template-columns: 1fr; text-align: center; }
+    }
+
+    .score-circle {
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #1e293b 60%, rgba(2, 132, 199, 0.2) 100%);
+      border: 4px solid #38bdf8;
+      box-shadow: 0 0 30px var(--primary-glow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+    }
+
+    .score-number {
+      font-size: 3.2rem;
+      font-weight: 800;
+      color: #38bdf8;
+      line-height: 1;
+    }
+
+    .score-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tier-badge {
+      display: inline-block;
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 0.5rem 1.25rem;
+      border-radius: 9999px;
+      margin-bottom: 0.75rem;
+      background: var(--accent-green-bg);
+      color: var(--accent-green);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .summary-text {
+      font-size: 1.1rem;
+      color: var(--text-main);
+      margin-bottom: 0.5rem;
+    }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .skills-grid { grid-template-columns: 1fr; }
+    }
+
+    .skill-block {
+      background: rgba(10, 14, 26, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.25rem;
+    }
+
+    .skill-block h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tags-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .tag {
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 0.3rem 0.75rem;
+      border-radius: 8px;
+    }
+
+    .tag-matched {
+      background: var(--accent-green-bg);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .tag-missing {
+      background: var(--accent-amber-bg);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .tag-extra {
+      background: var(--accent-purple-bg);
+      color: #c084fc;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .questions-box {
+      background: rgba(10, 14, 26, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.5rem;
+    }
+
+    .questions-box h4 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .question-item {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+      color: #cbd5e1;
+    }
+
+    .question-idx {
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Resume Analyser</h1>
-    <p>Hệ thống phân tích hồ sơ ứng viên tự động</p>
-    <div class="status">● Healthy - Deployed via Jenkins CI/CD</div>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div>
+          <h1>Resume Analyser</h1>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">AI CV Match & Technical Screening</p>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="badge" id="backendStatus"><span class="badge-dot"></span> Backend API: 8180</span>
+        <span class="badge">Jenkins CI/CD Active</span>
+      </div>
+    </header>
+
+    <div class="hero-banner">
+      <h2>Sàng Lọc & Phân Tích Độ Phù Hợp CV</h2>
+      <p>Hệ thống tự động so sánh hồ sơ ứng viên với yêu cầu công việc (JD), bóc tách kỹ năng công nghệ cốt lõi và đề xuất câu hỏi phỏng vấn chuyên sâu.</p>
+    </div>
+
+    <div class="input-grid">
+      <!-- Candidate Resume -->
+      <div class="input-card">
+        <div class="card-header">
+          <span class="card-title">📄 Hồ Sơ Ứng Viên (CV)</span>
+        </div>
+        <div class="presets">
+          <span style="font-size: 0.75rem; color: var(--text-muted); align-self: center;">Mẫu:</span>
+          <button class="preset-btn" onclick="loadSampleResume('java')">Senior Java</button>
+          <button class="preset-btn" onclick="loadSampleResume('frontend')">Frontend React</button>
+          <button class="preset-btn" onclick="loadSampleResume('devops')">DevOps/SRE</button>
+        </div>
+        <textarea id="resumeInput" placeholder="Dán nội dung hồ sơ / CV của ứng viên vào đây (kinh nghiệm, kỹ năng, công nghệ)..."></textarea>
+      </div>
+
+      <!-- Job Description -->
+      <div class="input-card">
+        <div class="card-header">
+          <span class="card-title">🎯 Yêu Cầu Tuyển Dụng (JD)</span>
+        </div>
+        <div class="presets">
+          <span style="font-size: 0.75rem; color: var(--text-muted); align-self: center;">Mẫu:</span>
+          <button class="preset-btn" onclick="loadSampleJd('backend')">Java Backend</button>
+          <button class="preset-btn" onclick="loadSampleJd('fullstack')">Fullstack Web</button>
+          <button class="preset-btn" onclick="loadSampleJd('cloud')">Cloud DevOps</button>
+        </div>
+        <textarea id="jdInput" placeholder="Dán mô tả công việc (Job Description) vào đây..."></textarea>
+      </div>
+    </div>
+
+    <div class="action-row">
+      <button class="btn-analyze" id="btnAnalyze" onclick="handleAnalyze()">
+        <span>🚀 Bắt Đầu Phân Tích Hồ Sơ</span>
+      </button>
+    </div>
+
+    <!-- Results Container -->
+    <div class="results-container" id="resultsBox">
+      <div class="results-header">
+        <div class="score-circle">
+          <div class="score-number" id="scoreValue">85%</div>
+          <div class="score-label">Tương thích</div>
+        </div>
+        <div>
+          <div class="tier-badge" id="tierValue">XUẤT SẮC - Ứng viên tiềm năng cao</div>
+          <div class="summary-text" id="summaryValue">Ứng viên đáp ứng đầy đủ các kỹ năng bắt buộc.</div>
+          <p style="color: var(--text-muted); font-size: 0.9rem;" id="timestampNote"></p>
+        </div>
+      </div>
+
+      <div class="skills-grid">
+        <div class="skill-block">
+          <h4><span style="color: var(--accent-green);">✔</span> Kỹ Năng Phù Hợp (<span id="matchedCount">0</span>)</h4>
+          <div class="tags-list" id="matchedTags"></div>
+        </div>
+        <div class="skill-block">
+          <h4><span style="color: var(--accent-amber);">⚠</span> Kỹ Năng Còn Thiếu (<span id="missingCount">0</span>)</h4>
+          <div class="tags-list" id="missingTags"></div>
+        </div>
+        <div class="skill-block">
+          <h4><span style="color: var(--accent-purple);">★</span> Kỹ Năng Bổ Sung (<span id="extraCount">0</span>)</h4>
+          <div class="tags-list" id="extraTags"></div>
+        </div>
+      </div>
+
+      <div class="questions-box">
+        <h4>💡 Đề Xuất Câu Hỏi Phỏng Vấn Chuyên Môn</h4>
+        <div id="questionsList"></div>
+      </div>
+    </div>
+
+    <footer>
+      <p>Resume Analyser v1.2 &bull; Triển khai tự động bởi Jenkins CI/CD & SonarQube Quality Gate</p>
+    </footer>
   </div>
+
+  <script>
+    const SAMPLES = {
+      resumes: {
+        java: `Kỹ sư phần mềm cao cấp (5+ năm kinh nghiệm)
+Kỹ năng: Java 21, Spring Boot, Microservices, REST API, Hibernate.
+Cơ sở dữ liệu & DevOps: PostgreSQL, MongoDB, Docker, Kubernetes, CI/CD, Jenkins, Git.
+Dự án: Xây dựng hệ thống thanh toán phân tán chịu tải 50,000 req/s. Tích hợp JUnit test và JaCoCo đạt 88% code coverage.`,
+        frontend: `Senior Frontend Developer (4 năm kinh nghiệm)
+Kỹ năng: React, Vue, TypeScript, JavaScript, NodeJS, HTML/CSS, Tailwind.
+Kiểm thử & CI/CD: Vitest, Jest, Git, Docker, REST API.
+Dự án: Phát triển Dashboard phân tích dữ liệu ứng viên, tối ưu Core Web Vitals LCP < 1.2s.`,
+        devops: `DevOps / Cloud Specialist (4 năm kinh nghiệm)
+Kỹ năng: Docker, Kubernetes, Jenkins, CI/CD, Linux, Python, AWS, GCP, Git, Terraform.
+Kinh nghiệm: Triển khai pipeline tự động kiểm tra bảo mật SonarQube, monitoring hệ thống microservices.`
+      },
+      jds: {
+        backend: `Tuyển Dụng Senior Java Backend Engineer
+Yêu cầu chuyên môn:
+- Thành thạo Java, Spring Boot, kiến trúc Microservices và REST API.
+- Có kinh nghiệm với Docker, Kubernetes, CI/CD và Git.
+- Làm việc tốt với cơ sở dữ liệu MongoDB hoặc PostgreSQL.
+- Tư duy viết Unit Test (JUnit) chuẩn mực.`,
+        fullstack: `Tuyển Dụng Fullstack Engineer (Java + React)
+Yêu cầu chuyên môn:
+- Backend: Java, Spring Boot, REST API, SQL.
+- Frontend: React, TypeScript, JavaScript, HTML/CSS.
+- Công cụ: Git, Docker, CI/CD, Jenkins.`,
+        cloud: `Tuyển Dụng DevOps / Site Reliability Engineer
+Yêu cầu chuyên môn:
+- Quản trị hạ tầng Linux, Docker, Kubernetes.
+- Tự động hóa CI/CD với Jenkins, Git.
+- Thành thạo scripting với Python hoặc Bash.
+- Có kinh nghiệm với nền tảng điện toán đám mây AWS hoặc GCP.`
+      }
+    };
+
+    function loadSampleResume(type) {
+      document.getElementById('resumeInput').value = SAMPLES.resumes[type] || '';
+    }
+
+    function loadSampleJd(type) {
+      document.getElementById('jdInput').value = SAMPLES.jds[type] || '';
+    }
+
+    async function checkBackend() {
+      const badge = document.getElementById('backendStatus');
+      try {
+        const res = await fetch('http://localhost:8180/', { mode: 'cors' });
+        if (res.ok) {
+          badge.innerHTML = '<span class="badge-dot" style="background:#10b981;"></span> Backend API: Online (8180)';
+          return;
+        }
+      } catch (e) {
+        // Fallback info
+      }
+      badge.innerHTML = '<span class="badge-dot" style="background:#38bdf8;"></span> Backend: Standby';
+    }
+
+    async function handleAnalyze() {
+      const resume = document.getElementById('resumeInput').value.trim();
+      const jd = document.getElementById('jdInput').value.trim();
+      const btn = document.getElementById('btnAnalyze');
+
+      if (!resume || !jd) {
+        alert('Vui lòng nhập đầy đủ nội dung CV và Yêu cầu tuyển dụng (JD) hoặc chọn mẫu ở trên!');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳ Đang phân tích hồ sơ...</span>';
+
+      try {
+        let data = null;
+        try {
+          const res = await fetch('http://localhost:8180/api/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ resume, jd })
+          });
+          if (res.ok) {
+            data = await res.json();
+          }
+        } catch (err) {
+          console.warn('API call failed, fallback to client-side engine', err);
+        }
+
+        if (!data) {
+          data = clientSideAnalyze(resume, jd);
+        }
+
+        renderResults(data);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>🚀 Bắt Đầu Phân Tích Hồ Sơ</span>';
+      }
+    }
+
+    function clientSideAnalyze(resume, jd) {
+      const DICT = ["Java", "Spring Boot", "Python", "Docker", "Kubernetes", "Jenkins", "CI/CD", "Git", "React", "Vue", "NodeJS", "TypeScript", "JavaScript", "SQL", "MongoDB", "PostgreSQL", "AWS", "GCP", "REST API", "Microservices", "Linux", "JUnit"];
+      const findSkills = (txt) => {
+        const lower = txt.toLowerCase();
+        return DICT.filter(s => lower.includes(s.toLowerCase()));
+      };
+
+      const rSkills = findSkills(resume);
+      const jSkills = findSkills(jd);
+
+      const rSet = new Set(rSkills);
+      const jSet = new Set(jSkills);
+
+      const matched = jSkills.filter(s => rSet.has(s));
+      const missing = jSkills.filter(s => !rSet.has(s));
+      const additional = rSkills.filter(s => !jSet.has(s));
+
+      const score = jSkills.length > 0 ? Math.round((matched.length / jSkills.length) * 100) : 75;
+      const tier = score >= 80 ? 'XUẤT SẮC - Ứng viên tiềm năng cao' : (score >= 60 ? 'PHÙ HỢP - Đạt đa số yêu cầu' : 'CẦN BỔ SUNG - Khoảng trống kỹ năng');
+
+      return {
+        score,
+        tier,
+        matchedSkills: matched,
+        missingSkills: missing,
+        additionalSkills: additional,
+        summary: `Ứng viên đáp ứng ${matched.length}/${jSkills.length} kỹ năng yêu cầu. Điểm số tương thích: ${score}%.`,
+        suggestedQuestions: [
+          matched[0] ? `Bạn đã ứng dụng ${matched[0]} trong các dự án thực tế gần nhất như thế nào?` : 'Kinh nghiệm lập trình chính của bạn là gì?',
+          missing[0] ? `Dự án cần ${missing[0]}, bạn đã từng tiếp cận hoặc tìm hiểu công nghệ này chưa?` : 'Kế hoạch học hỏi công nghệ mới của bạn?',
+          'Bạn thường xử lý các vấn đề hiệu năng và scale hệ thống ra sao?'
+        ]
+      };
+    }
+
+    function renderResults(data) {
+      document.getElementById('scoreValue').textContent = data.score + '%';
+      document.getElementById('tierValue').textContent = data.tier;
+      document.getElementById('summaryValue').textContent = data.summary;
+      document.getElementById('timestampNote').textContent = 'Đã phân tích vào lúc: ' + new Date().toLocaleTimeString('vi-VN');
+
+      renderTags('matchedTags', data.matchedSkills, 'tag-matched');
+      renderTags('missingTags', data.missingSkills, 'tag-missing');
+      renderTags('extraTags', data.additionalSkills, 'tag-extra');
+
+      document.getElementById('matchedCount').textContent = data.matchedSkills.length;
+      document.getElementById('missingCount').textContent = data.missingSkills.length;
+      document.getElementById('extraCount').textContent = data.additionalSkills.length;
+
+      const qBox = document.getElementById('questionsList');
+      qBox.innerHTML = '';
+      (data.suggestedQuestions || []).forEach((q, idx) => {
+        const item = document.createElement('div');
+        item.className = 'question-item';
+        item.innerHTML = `<span class="question-idx">${idx + 1}</span><span>${q}</span>`;
+        qBox.appendChild(item);
+      });
+
+      const box = document.getElementById('resultsBox');
+      box.style.display = 'block';
+      box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderTags(elementId, items, className) {
+      const container = document.getElementById(elementId);
+      container.innerHTML = '';
+      if (!items || items.length === 0) {
+        container.innerHTML = '<span style="color:var(--text-muted); font-size:0.8rem; font-style:italic;">Không có</span>';
+        return;
+      }
+      items.forEach(it => {
+        const tag = document.createElement('span');
+        tag.className = 'tag ' + className;
+        tag.textContent = it;
+        container.appendChild(tag);
+      });
+    }
+
+    // Initialize sample on load
+    loadSampleResume('java');
+    loadSampleJd('backend');
+    checkBackend();
+  </script>
 </body>
 </html>
