@@ -21,3 +21,22 @@ export function getMatchTier(score) {
   }
   return { label: 'Cần bổ sung', class: 'tier-low', color: '#f59e0b' };
 }
+
+export function generateReportSummary(data) {
+  if (!data) return '';
+  const score = data.score ?? 0;
+  const tier = data.tier ?? 'Chưa đánh giá';
+  const matched = (data.matchedSkills || []).join(', ') || 'Không có';
+  const missing = (data.missingSkills || []).join(', ') || 'Không có';
+  const extra = (data.additionalSkills || []).join(', ') || 'Không có';
+
+  return [
+    '=== BÁO CÁO ĐÁNH GIÁ ỨNG VIÊN ===',
+    `Điểm tương thích: ${score}%`,
+    `Phân loại: ${tier}`,
+    `Kỹ năng phù hợp: ${matched}`,
+    `Kỹ năng còn thiếu: ${missing}`,
+    `Kỹ năng bổ sung: ${extra}`,
+    `Tóm tắt: ${data.summary || 'N/A'}`
+  ].join('\n');
+}

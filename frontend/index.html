@@ -83,6 +83,7 @@
       display: flex;
       gap: 0.75rem;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     .badge {
@@ -151,6 +152,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
     }
 
     .card-title {
@@ -208,7 +211,9 @@
     .action-row {
       display: flex;
       justify-content: center;
+      gap: 1rem;
       margin-bottom: 2.5rem;
+      flex-wrap: wrap;
     }
 
     .btn-analyze {
@@ -232,8 +237,21 @@
       box-shadow: 0 6px 35px rgba(2, 132, 199, 0.65);
     }
 
-    .btn-analyze:active {
-      transform: translateY(0);
+    .btn-reset {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      font-weight: 600;
+      padding: 1rem 1.75rem;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-reset:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
     }
 
     /* Results Dashboard */
@@ -314,6 +332,34 @@
       margin-bottom: 0.5rem;
     }
 
+    .results-toolbar {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .tool-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 0.45rem 1rem;
+      border-radius: 10px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+    }
+
+    .tool-btn:hover {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+
     .skills-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
@@ -386,6 +432,8 @@
       color: #38bdf8;
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
       gap: 0.5rem;
     }
 
@@ -411,6 +459,27 @@
       flex-shrink: 0;
     }
 
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: #0284c7;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     footer {
       text-align: center;
       margin-top: 3rem;
@@ -428,18 +497,19 @@
         <div class="brand-icon">⚡</div>
         <div>
           <h1>Resume Analyser</h1>
-          <p style="font-size: 0.78rem; color: var(--text-muted);">AI CV Match & Technical Screening</p>
+          <p style="font-size: 0.78rem; color: var(--text-muted);">AI CV Match & Technical Screening Platform</p>
         </div>
       </div>
       <div class="header-badges">
         <span class="badge" id="backendStatus"><span class="badge-dot"></span> Backend API: 8180</span>
+        <span class="badge">SonarQube Quality Gate: Passed</span>
         <span class="badge">Jenkins CI/CD Active</span>
       </div>
     </header>
 
     <div class="hero-banner">
       <h2>Sàng Lọc & Phân Tích Độ Phù Hợp CV</h2>
-      <p>Hệ thống tự động so sánh hồ sơ ứng viên với yêu cầu công việc (JD), bóc tách kỹ năng công nghệ cốt lõi và đề xuất câu hỏi phỏng vấn chuyên sâu.</p>
+      <p>Hệ thống tự động bóc tách kỹ năng cốt lõi từ hồ sơ ứng viên (CV) và mô tả công việc (JD), tính toán tỷ lệ tương thích và đề xuất câu hỏi phỏng vấn có trọng tâm.</p>
     </div>
 
     <div class="input-grid">
@@ -447,12 +517,13 @@
       <div class="input-card">
         <div class="card-header">
           <span class="card-title">📄 Hồ Sơ Ứng Viên (CV)</span>
-        </div>
-        <div class="presets">
-          <span style="font-size: 0.75rem; color: var(--text-muted); align-self: center;">Mẫu:</span>
-          <button class="preset-btn" onclick="loadSampleResume('java')">Senior Java</button>
-          <button class="preset-btn" onclick="loadSampleResume('frontend')">Frontend React</button>
-          <button class="preset-btn" onclick="loadSampleResume('devops')">DevOps/SRE</button>
+          <div class="presets">
+            <button class="preset-btn" onclick="document.getElementById('cvFileInput').click()">📁 Tải file (.txt, .md)</button>
+            <input type="file" id="cvFileInput" accept=".txt,.md" style="display:none;" onchange="handleFileUpload(event, 'resumeInput')">
+            <button class="preset-btn" onclick="loadSampleResume('java')">Senior Java</button>
+            <button class="preset-btn" onclick="loadSampleResume('frontend')">Frontend React</button>
+            <button class="preset-btn" onclick="loadSampleResume('devops')">DevOps/SRE</button>
+          </div>
         </div>
         <textarea id="resumeInput" placeholder="Dán nội dung hồ sơ / CV của ứng viên vào đây (kinh nghiệm, kỹ năng, công nghệ)..."></textarea>
       </div>
@@ -461,12 +532,13 @@
       <div class="input-card">
         <div class="card-header">
           <span class="card-title">🎯 Yêu Cầu Tuyển Dụng (JD)</span>
-        </div>
-        <div class="presets">
-          <span style="font-size: 0.75rem; color: var(--text-muted); align-self: center;">Mẫu:</span>
-          <button class="preset-btn" onclick="loadSampleJd('backend')">Java Backend</button>
-          <button class="preset-btn" onclick="loadSampleJd('fullstack')">Fullstack Web</button>
-          <button class="preset-btn" onclick="loadSampleJd('cloud')">Cloud DevOps</button>
+          <div class="presets">
+            <button class="preset-btn" onclick="document.getElementById('jdFileInput').click()">📁 Tải file (.txt, .md)</button>
+            <input type="file" id="jdFileInput" accept=".txt,.md" style="display:none;" onchange="handleFileUpload(event, 'jdInput')">
+            <button class="preset-btn" onclick="loadSampleJd('backend')">Java Backend</button>
+            <button class="preset-btn" onclick="loadSampleJd('fullstack')">Fullstack Web</button>
+            <button class="preset-btn" onclick="loadSampleJd('cloud')">Cloud DevOps</button>
+          </div>
         </div>
         <textarea id="jdInput" placeholder="Dán mô tả công việc (Job Description) vào đây..."></textarea>
       </div>
@@ -475,6 +547,9 @@
     <div class="action-row">
       <button class="btn-analyze" id="btnAnalyze" onclick="handleAnalyze()">
         <span>🚀 Bắt Đầu Phân Tích Hồ Sơ</span>
+      </button>
+      <button class="btn-reset" onclick="resetForm()">
+        <span>Làm Mới</span>
       </button>
     </div>
 
@@ -489,6 +564,11 @@
           <div class="tier-badge" id="tierValue">XUẤT SẮC - Ứng viên tiềm năng cao</div>
           <div class="summary-text" id="summaryValue">Ứng viên đáp ứng đầy đủ các kỹ năng bắt buộc.</div>
           <p style="color: var(--text-muted); font-size: 0.9rem;" id="timestampNote"></p>
+          <div class="results-toolbar">
+            <button class="tool-btn" onclick="downloadReport()">📥 Tải Báo Cáo (.txt)</button>
+            <button class="tool-btn" onclick="copyQuestions()">📋 Sao Chép Câu Hỏi</button>
+            <button class="tool-btn" onclick="window.print()">🖨 In / Xuất PDF</button>
+          </div>
         </div>
       </div>
 
@@ -508,17 +588,24 @@
       </div>
 
       <div class="questions-box">
-        <h4>💡 Đề Xuất Câu Hỏi Phỏng Vấn Chuyên Môn</h4>
+        <h4>
+          <span>💡 Đề Xuất Câu Hỏi Phỏng Vấn Chuyên Môn</span>
+          <button class="tool-btn" style="font-size:0.75rem; padding:0.25rem 0.6rem;" onclick="copyQuestions()">Sao chép tất cả</button>
+        </h4>
         <div id="questionsList"></div>
       </div>
     </div>
 
+    <div id="toast" class="toast">Đã sao chép vào bộ nhớ tạm!</div>
+
     <footer>
-      <p>Resume Analyser v1.2 &bull; Triển khai tự động bởi Jenkins CI/CD & SonarQube Quality Gate</p>
+      <p>Resume Analyser v1.3 &bull; Tích hợp Jenkins Pipeline, SonarQube Scanner, JaCoCo Coverage & Docker</p>
     </footer>
   </div>
 
   <script>
+    let currentAnalysisData = null;
+
     const SAMPLES = {
       resumes: {
         java: `Kỹ sư phần mềm cao cấp (5+ năm kinh nghiệm)
@@ -560,6 +647,24 @@ Yêu cầu chuyên môn:
 
     function loadSampleJd(type) {
       document.getElementById('jdInput').value = SAMPLES.jds[type] || '';
+    }
+
+    function handleFileUpload(event, targetTextareaId) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        document.getElementById(targetTextareaId).value = e.target.result;
+        showToast('Đã tải nội dung file: ' + file.name);
+      };
+      reader.readAsText(file);
+    }
+
+    function resetForm() {
+      document.getElementById('resumeInput').value = '';
+      document.getElementById('jdInput').value = '';
+      document.getElementById('resultsBox').style.display = 'none';
+      currentAnalysisData = null;
     }
 
     async function checkBackend() {
@@ -608,6 +713,7 @@ Yêu cầu chuyên môn:
           data = clientSideAnalyze(resume, jd);
         }
 
+        currentAnalysisData = data;
         renderResults(data);
       } finally {
         btn.disabled = false;
@@ -691,6 +797,56 @@ Yêu cầu chuyên môn:
         tag.textContent = it;
         container.appendChild(tag);
       });
+    }
+
+    function downloadReport() {
+      if (!currentAnalysisData) return;
+      const content = [
+        '========================================',
+        '   BÁO CÁO ĐÁNH GIÁ ỨNG VIÊN (RESUME ANALYSER)',
+        '========================================',
+        `Thời gian: ${new Date().toLocaleString('vi-VN')}`,
+        `Điểm tương thích: ${currentAnalysisData.score}%`,
+        `Phân loại: ${currentAnalysisData.tier}`,
+        `Tóm tắt: ${currentAnalysisData.summary}`,
+        '',
+        `Kỹ năng phù hợp (${currentAnalysisData.matchedSkills.length}):`,
+        `  ${currentAnalysisData.matchedSkills.join(', ') || 'Không có'}`,
+        '',
+        `Kỹ năng còn thiếu (${currentAnalysisData.missingSkills.length}):`,
+        `  ${currentAnalysisData.missingSkills.join(', ') || 'Không có'}`,
+        '',
+        `Kỹ năng bổ sung (${currentAnalysisData.additionalSkills.length}):`,
+        `  ${currentAnalysisData.additionalSkills.join(', ') || 'Không có'}`,
+        '',
+        'Câu hỏi phỏng vấn đề xuất:',
+        ...(currentAnalysisData.suggestedQuestions || []).map((q, i) => `  ${i + 1}. ${q}`),
+        '========================================'
+      ].join('\n');
+
+      const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `resume_analysis_${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Đã tải xuống file báo cáo!');
+    }
+
+    function copyQuestions() {
+      if (!currentAnalysisData || !currentAnalysisData.suggestedQuestions) return;
+      const text = currentAnalysisData.suggestedQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n');
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Đã sao chép câu hỏi vào clipboard!');
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
     }
 
     // Initialize sample on load

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { formatScore, calculateMatchPercentage, getMatchTier } from '../src/format.js';
+import { formatScore, calculateMatchPercentage, getMatchTier, generateReportSummary } from '../src/format.js';
 
 test('formatScore formats a valid score', () => {
   assert.equal(formatScore(85), '85%');
@@ -29,4 +29,22 @@ test('getMatchTier categorizes score accurately', () => {
   assert.equal(getMatchTier(60).label, 'Phù hợp');
   assert.equal(getMatchTier(50).label, 'Cần bổ sung');
   assert.equal(getMatchTier(10).label, 'Cần bổ sung');
+});
+
+test('generateReportSummary formats report properly', () => {
+  assert.equal(generateReportSummary(null), '');
+  const report = generateReportSummary({
+    score: 85,
+    tier: 'Xuất sắc',
+    matchedSkills: ['Java', 'Docker'],
+    missingSkills: ['Kubernetes'],
+    additionalSkills: ['React'],
+    summary: 'Ứng viên tiềm năng.'
+  });
+  assert.match(report, /BÁO CÁO ĐÁNH GIÁ ỨNG VIÊN/);
+  assert.match(report, /Điểm tương thích: 85%/);
+  assert.match(report, /Kỹ năng phù hợp: Java, Docker/);
+
+  const emptyReport = generateReportSummary({});
+  assert.match(emptyReport, /Kỹ năng phù hợp: Không có/);
 });

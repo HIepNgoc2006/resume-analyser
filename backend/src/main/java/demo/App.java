@@ -9,23 +9,44 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class App {
-    public static final String[] SKILL_DICTIONARY = {
+    private static final Logger LOGGER = Logger.getLogger(App.class.getName());
+    private static final String HEADER_CONTENT_TYPE = "Content-Type";
+    private static final String APPLICATION_JSON = "application/json";
+    private static final String APPLICATION_JSON_UTF8 = "application/json; charset=UTF-8";
+
+    private static final List<String> SKILL_DICTIONARY = List.of(
         "Java", "Spring Boot", "Python", "Docker", "Kubernetes",
         "Jenkins", "CI/CD", "Git", "React", "Vue", "NodeJS",
         "TypeScript", "JavaScript", "SQL", "MongoDB", "PostgreSQL",
         "AWS", "GCP", "REST API", "Microservices", "Linux", "JUnit"
-    };
+    );
 
-    public static void main(String[] args) throws IOException {
-        int port = 8180;
+    public static List<String> getSkillDictionary() {
+        return SKILL_DICTIONARY;
+    }
+
+    public static HttpServer startServer(int port) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext("/", new HealthHandler());
         server.createContext("/api/analyze", new AnalyzeHandler());
         server.setExecutor(null);
-        System.out.println("Backend started on port " + port);
         server.start();
+        LOGGER.info(() -> "Backend started on port " + server.getAddress().getPort());
+        return server;
+    }
+
+    public static void stopServer(HttpServer server) {
+        if (server != null) {
+            server.stop(0);
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        startServer(8180);
     }
 
     public int add(int a, int b) {
@@ -36,62 +57,87 @@ public class App {
         if (text == null || text.isBlank()) {
             return Collections.emptyList();
         }
-        String lower = text.toLowerCase();
+        String lower = text.toLowerCase(Locale.ROOT);
         List<String> found = new ArrayList<>();
         for (String skill : SKILL_DICTIONARY) {
-            String target = skill.toLowerCase();
-            if (lower.contains(target)) {
+            if (lower.contains(skill.toLowerCase(Locale.ROOT))) {
                 found.add(skill);
             }
         }
-        return found;
+        return Collections.unmodifiableList(found);
     }
 
     public static AnalysisResult analyze(String resume, String jd) {
         List<String> resumeSkills = extractSkills(resume);
         List<String> jdSkills = extractSkills(jd);
 
-        List<String> matched = new ArrayList<>();
-        List<String> missing = new ArrayList<>();
-        List<String> additional = new ArrayList<>();
-
         Set<String> resumeSet = new HashSet<>(resumeSkills);
         Set<String> jdSet = new HashSet<>(jdSkills);
 
-        for (String s : jdSkills) {
-            if (resumeSet.contains(s)) {
-                matched.add(s);
-            } else {
-                missing.add(s);
-            }
-        }
+        List<String> matched = findMatched(jdSkills, resumeSet);
+        List<String> missing = findMissing(jdSkills, resumeSet);
+        List<String> additional = findAdditional(resumeSkills, jdSet);
 
-        for (String s : resumeSkills) {
-            if (!jdSet.contains(s)) {
-                additional.add(s);
-            }
-        }
-
-        int score;
-        if (jdSkills.isEmpty()) {
-            score = resumeSkills.isEmpty() ? 50 : 80;
-        } else {
-            score = (int) Math.round(((double) matched.size() / jdSkills.size()) * 100);
-            if (score > 100) score = 100;
-        }
-
-        String tier;
-        if (score >= 80) {
-            tier = "XUẤT SẮC - Ứng viên tiềm năng cao";
-        } else if (score >= 60) {
-            tier = "PHÙ HỢP - Đạt đa số yêu cầu cốt lõi";
-        } else {
-            tier = "CẦN BỔ SUNG - Khoảng trống kỹ năng đáng kể";
-        }
+        int score = calculateScore(matched.size(), jdSkills.size(), !resumeSkills.isEmpty());
+        String tier = determineTier(score);
 
         String summary = String.format("Ứng viên đáp ứng %d/%d kỹ năng yêu cầu. Điểm số tương thích: %d%%.",
                 matched.size(), jdSkills.size(), score);
 
+        List<String> questions = buildQuestions(matched, missing);
+
+        return new AnalysisResult(score, tier, matched, missing, additional, summary, questions);
+    }
+
+    private static List<String> findMatched(List<String> jdSkills, Set<String> resumeSet) {
+        List<String> matched = new ArrayList<>();
+        for (String skill : jdSkills) {
+            if (resumeSet.contains(skill)) {
+                matched.add(skill);
+            }
+        }
+        return matched;
+    }
+
+    private static List<String> findMissing(List<String> jdSkills, Set<String> resumeSet) {
+        List<String> missing = new ArrayList<>();
+        for (String skill : jdSkills) {
+            if (!resumeSet.contains(skill)) {
+                missing.add(skill);
+            }
+        }
+        return missing;
+    }
+
+    private static List<String> findAdditional(List<String> resumeSkills, Set<String> jdSet) {
+        List<String> additional = new ArrayList<>();
+        for (String skill : resumeSkills) {
+            if (!jdSet.contains(skill)) {
+                additional.add(skill);
+            }
+        }
+        return additional;
+    }
+
+    private static int calculateScore(int matchedCount, int totalJd, boolean hasResumeSkills) {
+        if (totalJd == 0) {
+            return hasResumeSkills ? 80 : 50;
+        }
+        int score = (int) Math.round(((double) matchedCount / totalJd) * 100);
+        return Math.min(100, Math.max(0, score));
+    }
+
+    private static String determineTier(int score) {
+        if (score >= 80) {
+            return "XUẤT SẮC - Ứng viên tiềm năng cao";
+        }
+        if (score >= 60) {
+            return "PHÙ HỢP - Đạt đa số yêu cầu cốt lõi";
+        }
+        return "CẦN BỔ SUNG - Khoảng trống kỹ năng đáng kể";
+    }
+
+    private static List<String> buildQuestions(List<String> matched, List<String> missing) {
         List<String> questions = new ArrayList<>();
         if (!matched.isEmpty()) {
             questions.add(String.format("Bạn đã ứng dụng %s trong các dự án thực tế gần nhất như thế nào?", matched.get(0)));
@@ -104,8 +150,7 @@ public class App {
         } else {
             questions.add("Bạn có kinh nghiệm lãnh đạo nhóm kỹ thuật hoặc chia sẻ kiến thức công nghệ không?");
         }
-
-        return new AnalysisResult(score, tier, matched, missing, additional, summary, questions);
+        return questions;
     }
 
     public static class AnalysisResult {
@@ -180,7 +225,7 @@ public class App {
                 return;
             }
             String response = "{\"status\":\"UP\",\"app\":\"resume-analyser-backend\",\"version\":\"v1.0\"}";
-            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.getResponseHeaders().set(HEADER_CONTENT_TYPE, APPLICATION_JSON);
             byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(200, bytes.length);
             try (OutputStream os = exchange.getResponseBody()) {
@@ -200,7 +245,7 @@ public class App {
 
             if (!"POST".equalsIgnoreCase(exchange.getRequestMethod())) {
                 String error = "{\"error\":\"Only POST allowed\"}";
-                exchange.getResponseHeaders().set("Content-Type", "application/json");
+                exchange.getResponseHeaders().set(HEADER_CONTENT_TYPE, APPLICATION_JSON);
                 byte[] b = error.getBytes(StandardCharsets.UTF_8);
                 exchange.sendResponseHeaders(405, b.length);
                 try (OutputStream os = exchange.getResponseBody()) {
@@ -218,7 +263,7 @@ public class App {
             AnalysisResult result = analyze(resume, jd);
             String jsonResponse = result.toJson();
 
-            exchange.getResponseHeaders().set("Content-Type", "application/json; charset=UTF-8");
+            exchange.getResponseHeaders().set(HEADER_CONTENT_TYPE, APPLICATION_JSON_UTF8);
             byte[] bytes = jsonResponse.getBytes(StandardCharsets.UTF_8);
             exchange.sendResponseHeaders(200, bytes.length);
             try (OutputStream os = exchange.getResponseBody()) {
@@ -226,7 +271,7 @@ public class App {
             }
         }
 
-        private static String extractField(String json, String fieldName) {
+        static String extractField(String json, String fieldName) {
             String key = "\"" + fieldName + "\"";
             int idx = json.indexOf(key);
             if (idx == -1) return "";
