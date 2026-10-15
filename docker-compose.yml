@@ -1,0 +1,16 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    image: resume-analyser-backend:latest
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8180}:8180"
+
+  frontend:
+    build:
+      context: ./frontend
+    image: resume-analyser-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3100}:80"
